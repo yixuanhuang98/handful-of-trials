@@ -15,14 +15,14 @@ import dmbrl.env
 class CartpoleConfigModule:
     ENV_NAME = "Pendlum-v0"
     TASK_HORIZON = 200
-    NTRAIN_ITERS = 50
+    NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 25
     MODEL_IN, MODEL_OUT = 5, 2   # could change the shape of the tensor
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
-        self.ENV = env = e.RacecarGymEnv(isDiscrete=False ,renders=False) #gym.make(self.ENV_NAME)
+        self.ENV = env = e.RacecarGymEnv(isDiscrete=False ,renders=True) #gym.make(self.ENV_NAME)
         cfg = tf.ConfigProto()
         cfg.gpu_options.allow_growth = True
         self.SESS = tf.Session(config=cfg)

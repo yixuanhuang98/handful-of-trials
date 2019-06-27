@@ -10,7 +10,8 @@
   <a href="https://sites.google.com/view/drl-in-a-handful-of-trials/home">View website</a>
 </p>
 
-**Abstract:** Model-based reinforcement learning (RL) algorithms can attain excellent sample
+**Abstract:** 
+I just use it to train some good model based examples. Model-based reinforcement learning (RL) algorithms can attain excellent sample
 efficiency, but often lag behind the best model-free algorithms in terms of asymptotic performance,
 especially those with high-capacity parametric function approximators, such as deep networks.
 In this paper, we study how to bridge this gap, by employing uncertainty-aware dynamics models.
