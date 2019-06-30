@@ -1,13 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import absolute_import
-
-import numpy as np
-#from gym.wrappers.monitoring import VideoRecorder
-import gym
-from dotmap import DotMap
-
-import time
 import sys
 import re
 import multiprocessing
@@ -16,8 +6,7 @@ import gym
 from collections import defaultdict
 import tensorflow as tf
 import numpy as np
-import dmbrl.misc.MBExp
-from dmbrl.misc.run import run
+import torch
 
 from baselines.common.vec_env import VecFrameStack, VecNormalize, VecEnv
 from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
@@ -214,12 +203,15 @@ def configure_logger(log_path, **kwargs):
         logger.configure(**kwargs)
 
 
-def get_ppo():#):
+def main(args):
     # configure logger, disable logging in child MPI processes (with rank > 0)
-    print('enter main function')
-    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e3']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    
+    #print('enter main function')
+    args = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    print(args)
     arg_parser = common_arg_parser()
-    args1, unknown_args = arg_parser.parse_known_args(args1)
+    args, unknown_args = arg_parser.parse_known_args(args)
+    #model_dict=torch.load("/Users/huangyixuan/my_pytorch/pred_model/nn2.pt")
     print('unknown_args')
     print(unknown_args)
     extra_args = parse_cmdline_kwargs(unknown_args)
@@ -231,9 +223,73 @@ def get_ppo():#):
         #configure_logger(args.log_path)
     else:
         rank = MPI.COMM_WORLD.Get_rank()
-        configure_logger(args1.log_path, format_strs=[])
+        configure_logger(args.log_path, format_strs=[])
 
-    model, env = train(args1, extra_args)
+    model, env = train(args, extra_args)
+    #return model
+    #env = e.RacecarGymEnv(isDiscrete=False ,renders=True)
+    
+
+    if args.save_path is not None and rank == 0:
+        save_path = osp.expanduser(args.save_path)
+        model.save(save_path)
+
+    if args.play:
+        logger.log("Running trained model")
+        obs = env.reset()
+
+        state = model.initial_state if hasattr(model, 'initial_state') else None
+        dones = np.zeros((1,))
+
+        episode_rew = 0
+        while True:
+            if state is not None:
+                actions, _, state, _ = model.step(obs,S=state, M=dones)
+            else:
+                actions, _, _, _ = model.step(obs)
+            print('obs')
+            print(obs)
+            print('actions')
+            print(actions)
+
+            obs, rew, done, _ = env.step(actions)
+            episode_rew += rew[0] if isinstance(env, VecEnv) else rew
+            env.render()
+            done = done.any() if isinstance(done, np.ndarray) else done
+            if done:
+                print('episode_rew={}'.format(episode_rew))
+                episode_rew = 0
+                obs = env.reset()
+
+    env.close()
+
+    return model
+
+if __name__ == '__main__':
+    main(sys.argv)
+
+def run():
+    # configure logger, disable logging in child MPI processes (with rank > 0)
+    
+    #print('enter main function')
+    args = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    print(args)
+    arg_parser = common_arg_parser()
+    args, unknown_args = arg_parser.parse_known_args(args)
+    print('unknown_args')
+    print(unknown_args)
+    extra_args = parse_cmdline_kwargs(unknown_args)
+    print('extra')
+    print(extra_args)
+
+    if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
+        rank = 0
+        #configure_logger(args.log_path)
+    else:
+        rank = MPI.COMM_WORLD.Get_rank()
+        configure_logger(args.log_path, format_strs=[])
+
+    model, env = train(args, extra_args)
     return model
     #env = e.RacecarGymEnv(isDiscrete=False ,renders=True)
     
@@ -255,7 +311,7 @@ def get_ppo():#):
     #             actions, _, state, _ = model.step(obs,S=state, M=dones)
     #         else:
     #             actions, _, _, _ = model.step(obs)
-    #         print(actions)
+    #         #print(actions)
 
     #         obs, rew, done, _ = env.step(actions)
     #         episode_rew += rew[0] if isinstance(env, VecEnv) else rew
@@ -266,116 +322,12 @@ def get_ppo():#):
     #             episode_rew = 0
     #             obs = env.reset()
 
-#     env.close()
+    # env.close()
 
-#     return model
+    #return model
 
 # if __name__ == '__main__':
 #     main(sys.argv)
 
 
 
-class Agent:
-    """An general class for RL agents.
-    """
-    def __init__(self, params):
-        """Initializes an agent.
-
-        Arguments:
-            params: (DotMap) A DotMap of agent parameters.
-                .env: (OpenAI gym environment) The environment for this agent.
-                .noisy_actions: (bool) Indicates whether random Gaussian noise will 
-                    be added to the actions of this agent.
-                .noise_stddev: (float) The standard deviation to be used for the 
-                    action noise if params.noisy_actions is True.
-        """
-        self.env = params.env
-        self.noise_stddev = params.noise_stddev if params.get("noisy_actions", False) else None
-        self.ppo_policy = get_ppo()
-        if isinstance(self.env, DotMap):
-            raise ValueError("Environment must be provided to the agent at initialization.")
-        if (not isinstance(self.noise_stddev, float)) and params.get("noisy_actions", False):
-            raise ValueError("Must provide standard deviation for noise for noisy actions.")
-
-        if self.noise_stddev is not None:
-            self.dU = self.env.action_space.shape[0]
-
-    def sample(self, horizon, policy, record_fname=None):
-        """Samples a rollout from the agent.
-
-        Arguments: 
-            horizon: (int) The length of the rollout to generate from the agent.
-            policy: (policy) The policy that the agent will use for actions.
-            record_fname: (str/None) The name of the file to which a recording of the rollout
-                will be saved. If None, the rollout will not be recorded.
-
-        Returns: (dict) A dictionary containing data from the rollout.
-            The keys of the dictionary are 'obs', 'ac', and 'reward_sum'.
-        """
-        # configure logger, disable logging in child MPI processes (with rank > 0)
-        
-        # beginning the ppo function
-        # print('enter main function')
-        # arg_parser = common_arg_parser()
-        # args, unknown_args = arg_parser.parse_known_args(args)
-        # extra_args = parse_cmdline_kwargs(unknown_args)
-
-        # if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
-        #     rank = 0
-        # #configure_logger(args.log_path)
-        # else:
-        #     rank = MPI.COMM_WORLD.Get_rank()
-        #     configure_logger(args.log_path, format_strs=[])
-
-        # model, env = train(args, extra_args)
-
-        # end of the ppo function
-
-        video_record = record_fname is not None
-        video_record = False
-        recorder = None if not video_record else gym.wrappers.Monitor(self.env, record_fname)
-
-        times, rewards = [], []
-        O, A, reward_sum, done = [self.env.reset()], [], 0, False
-        policy.reset()
-        for t in range(horizon):
-            if video_record:
-                recorder.capture_frame()
-            start = time.time()
-            
-            #if(O)
-            A.append(policy.act(O[t], t))
-            print('Obsercvation')
-            print(O[t])
-            print('action')
-            print(policy.act(O[t], t))
-            # O_next = policy._predict_next_obs(O[t],A[t])
-            # print('next')
-            # print(O_next)
-            times.append(time.time() - start)
-
-            if self.noise_stddev is None:
-                obs, reward, done, info = self.env.step(A[t])
-            else:
-                action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
-                action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
-                obs, reward, done, info = self.env.step(action)
-            O.append(obs)
-            reward_sum += reward
-            rewards.append(reward)
-            if done:
-                break
-
-        if video_record:
-            recorder.capture_frame()
-            recorder.close()
-
-        print("Average action selection time: ", np.mean(times))
-        print("Rollout length: ", len(A))
-
-        return {
-            "obs": np.array(O),
-            "ac": np.array(A),
-            "reward_sum": reward_sum,
-            "rewards": np.array(rewards),
-        }

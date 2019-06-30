@@ -13,6 +13,7 @@ from dmbrl.misc.DotmapUtils import get_required_argument
 from dmbrl.misc.Agent import Agent
 
 
+
 class MBExperiment:
     def __init__(self, params):
         """Initializes class instance.
@@ -79,6 +80,7 @@ class MBExperiment:
 
         # Perform initial rollouts
         samples = []
+        print(self.ninit_rollouts)
         for i in range(self.ninit_rollouts):
             samples.append(
                 self.agent.sample(
@@ -88,7 +90,7 @@ class MBExperiment:
             traj_obs.append(samples[-1]["obs"])
             traj_acs.append(samples[-1]["ac"])
             traj_rews.append(samples[-1]["rewards"])
-
+        #print((samples))
         if self.ninit_rollouts > 0:
             self.policy.train(
                 [sample["obs"] for sample in samples],
@@ -112,6 +114,7 @@ class MBExperiment:
                         os.path.join(iter_dir, "rollout%d.mp4" % j)
                     )
                 )
+            #print(samples)
             if self.nrecord > 0:
                 for item in filter(lambda f: f.endswith(".json"), os.listdir(iter_dir)):
                     os.remove(os.path.join(iter_dir, item))
@@ -121,11 +124,13 @@ class MBExperiment:
                         self.task_hor, self.policy
                     )
                 )
+            #print(samples)
             print("Rewards obtained:", [sample["reward_sum"] for sample in samples[:self.neval]])
             traj_obs.extend([sample["obs"] for sample in samples[:self.nrollouts_per_iter]])
             traj_acs.extend([sample["ac"] for sample in samples[:self.nrollouts_per_iter]])
             traj_rets.extend([sample["reward_sum"] for sample in samples[:self.neval]])
             traj_rews.extend([sample["rewards"] for sample in samples[:self.nrollouts_per_iter]])
+            #print()
             samples = samples[:self.nrollouts_per_iter]
 
             self.policy.dump_logs(self.logdir, iter_dir)

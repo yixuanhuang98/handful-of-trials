@@ -11,6 +11,7 @@
 </p>
 
 **Abstract:** 
+python render.py -env racecar -model-dir /Users/huangyixuan/handful-of-trials/log/log/2019-06-27--01:25:54/train_iter400/ -logdir /Users/huangyixuan/handful-of-trials/log/log/new/
 I just use it to train some good model based examples. Model-based reinforcement learning (RL) algorithms can attain excellent sample
 efficiency, but often lag behind the best model-free algorithms in terms of asymptotic performance,
 especially those with high-capacity parametric function approximators, such as deep networks.

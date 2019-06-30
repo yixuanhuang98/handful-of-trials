@@ -316,8 +316,11 @@ class MPC(Controller):
             return tf.reduce_mean(tf.where(tf.is_nan(costs), 1e6 * tf.ones_like(costs), costs), axis=1)
 
     def _predict_next_obs(self, obs, acs):
+        print('obs')
+        print(obs)
         proc_obs = self.obs_preproc(obs)
-
+        print('proc_obs')
+        print(proc_obs)
         if self.model.is_tf_model:
             # TS Optimization: Expand so that particles are only passed through one of the networks.
             if self.prop_mode == "TS1":

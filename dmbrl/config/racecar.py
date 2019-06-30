@@ -22,7 +22,7 @@ class CartpoleConfigModule:
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
-        self.ENV = env = e.RacecarGymEnv(isDiscrete=False ,renders=True) #gym.make(self.ENV_NAME)
+        self.ENV = env = e.RacecarGymEnv(isDiscrete=False ,renders=False) #gym.make(self.ENV_NAME)
         cfg = tf.ConfigProto()
         cfg.gpu_options.allow_growth = True
         self.SESS = tf.Session(config=cfg)
