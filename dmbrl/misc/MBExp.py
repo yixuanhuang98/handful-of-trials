@@ -84,7 +84,7 @@ class MBExperiment:
         for i in range(self.ninit_rollouts):
             samples.append(
                 self.agent.sample(
-                    self.task_hor, self.policy
+                    self.task_hor, self.policy, 1
                 )
             )
             traj_obs.append(samples[-1]["obs"])
@@ -110,7 +110,7 @@ class MBExperiment:
             for j in range(self.nrecord):
                 samples.append(
                     self.agent.sample(
-                        self.task_hor, self.policy,
+                        self.task_hor, self.policy, 0,
                         os.path.join(iter_dir, "rollout%d.mp4" % j)
                     )
                 )
@@ -121,7 +121,7 @@ class MBExperiment:
             for j in range(max(self.neval, self.nrollouts_per_iter) - self.nrecord):
                 samples.append(
                     self.agent.sample(
-                        self.task_hor, self.policy
+                        self.task_hor, self.policy, 0
                     )
                 )
             #print(samples)

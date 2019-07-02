@@ -300,7 +300,7 @@ class Agent:
         if self.noise_stddev is not None:
             self.dU = self.env.action_space.shape[0]
 
-    def sample(self, horizon, policy, record_fname=None):
+    def sample(self, horizon, policy, leap, record_fname=None):
         """Samples a rollout from the agent.
 
         Arguments: 
@@ -337,19 +337,32 @@ class Agent:
 
         times, rewards = [], []
         O, A, reward_sum, done = [self.env.reset()], [], 0, False
+        #O[0] = 
         policy.reset()
         for t in range(horizon):
             if video_record:
                 recorder.capture_frame()
             start = time.time()
             
-            #if(O)
-            A.append(policy.act(O[t], t))
+            if(leap == 1 or O[t][1] > 1 or O[t][1] < -1):
+                true_action = policy.act(O[t], t)
+            else:
+                O_new = np.zeros((1,2))
+                O_new[0,:] = O[t]
+                step_action, _ , _ , _ = self.ppo_policy.step(O_new)
+                true_action = step_action[0]
+                #step_action = self.ppo_policy(O[t])
+            
+            A.append(true_action)
             print('Obsercvation')
             print(O[t])
             print('action')
-            print(policy.act(O[t], t))
-            # O_next = policy._predict_next_obs(O[t],A[t])
+            print(A[t])
+            # new_array = np.zeros((1,2))
+            # new_array[0,:] = O[t]
+            # new_ac = np.zeros((1,2))
+            # new_ac[0,:] = A[t]
+            # O_next = policy._predict_next_obs(new_array,new_ac)
             # print('next')
             # print(O_next)
             times.append(time.time() - start)

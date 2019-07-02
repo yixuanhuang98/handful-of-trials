@@ -24,7 +24,7 @@ class RandomOptimizer(Optimizer):
             lower_bound (np.array): An array of lower bounds
         """
         super().__init__()
-        self.sol_dim = sol_dim
+        self.sol_dim = 20#sol_dim
         self.popsize = popsize
         self.ub, self.lb = upper_bound, lower_bound
         self.tf_sess = tf_session

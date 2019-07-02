@@ -15,7 +15,7 @@ from dmbrl.misc.optimizers import RandomOptimizer, CEMOptimizer
 
 class MPC(Controller):
     optimizers = {"CEM": CEMOptimizer, "Random": RandomOptimizer}
-
+    #optimizers = {"Random": RandomOptimizer}
     def __init__(self, params):
         """Creates class instance.
 
@@ -302,6 +302,10 @@ class MPC(Controller):
         else:
             def iteration(t, total_cost, cur_obs):
                 cur_acs = ac_seqs[t]
+                print('cur_obs')
+                print(cur_obs)
+                print('cur_acs')
+                print(cur_acs)
                 next_obs = self._predict_next_obs(cur_obs, cur_acs)
                 delta_cost = tf.reshape(
                     self.obs_cost_fn(next_obs) + self.ac_cost_fn(cur_acs), [-1, self.npart]
@@ -371,7 +375,8 @@ class MPC(Controller):
             raise NotImplementedError()
 
     def _expand_to_ts_format(self, mat):
-        dim = mat.get_shape()[-1]
+        #dim = mat.get_shape()[-1]
+        dim = tf.shape(mat)[-1]
         return tf.reshape(
             tf.transpose(
                 tf.reshape(mat, [-1, self.model.num_nets, self.npart // self.model.num_nets, dim]),
