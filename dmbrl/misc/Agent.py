@@ -300,7 +300,7 @@ class Agent:
         if self.noise_stddev is not None:
             self.dU = self.env.action_space.shape[0]
 
-    def sample(self, horizon, policy, leap, record_fname=None):
+    def sample(self, horizon, policy, record_fname=None):
         """Samples a rollout from the agent.
 
         Arguments: 
