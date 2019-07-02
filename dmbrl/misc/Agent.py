@@ -217,7 +217,7 @@ def configure_logger(log_path, **kwargs):
 def get_ppo():#):
     # configure logger, disable logging in child MPI processes (with rank > 0)
     print('enter main function')
-    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e6']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e3']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
     arg_parser = common_arg_parser()
     args1, unknown_args = arg_parser.parse_known_args(args1)
     print('unknown_args')
