@@ -78,25 +78,25 @@ class MBExperiment:
 
         traj_obs, traj_acs, traj_rets, traj_rews = [], [], [], []
 
-        # Perform initial rollouts
-        samples = []
-        print(self.ninit_rollouts)
-        for i in range(self.ninit_rollouts):
-            samples.append(
-                self.agent.sample(
-                    self.task_hor, self.policy, 1
-                )
-            )
-            traj_obs.append(samples[-1]["obs"])
-            traj_acs.append(samples[-1]["ac"])
-            traj_rews.append(samples[-1]["rewards"])
-        #print((samples))
-        if self.ninit_rollouts > 0:
-            self.policy.train(
-                [sample["obs"] for sample in samples],
-                [sample["ac"] for sample in samples],
-                [sample["rewards"] for sample in samples]
-            )
+        # # Perform initial rollouts
+        # samples = []
+        # print(self.ninit_rollouts)
+        # for i in range(self.ninit_rollouts):
+        #     samples.append(
+        #         self.agent.sample(
+        #             self.task_hor, self.policy
+        #         )
+        #     )
+        #     traj_obs.append(samples[-1]["obs"])
+        #     traj_acs.append(samples[-1]["ac"])
+        #     traj_rews.append(samples[-1]["rewards"])
+        # #print((samples))
+        # if self.ninit_rollouts > 0:
+        #     self.policy.train(
+        #         [sample["obs"] for sample in samples],
+        #         [sample["ac"] for sample in samples],
+        #         [sample["rewards"] for sample in samples]
+        #     )
 
         # Training loop
         for i in range(self.ntrain_iters):
@@ -110,7 +110,7 @@ class MBExperiment:
             for j in range(self.nrecord):
                 samples.append(
                     self.agent.sample(
-                        self.task_hor, self.policy, 0,
+                        self.task_hor, self.policy,
                         os.path.join(iter_dir, "rollout%d.mp4" % j)
                     )
                 )
@@ -121,7 +121,7 @@ class MBExperiment:
             for j in range(max(self.neval, self.nrollouts_per_iter) - self.nrecord):
                 samples.append(
                     self.agent.sample(
-                        self.task_hor, self.policy, 0
+                        self.task_hor, self.policy
                     )
                 )
             #print(samples)

@@ -21,7 +21,7 @@ def main(env, ctrl_type, ctrl_args, overrides, model_dir, logdir):
     overrides.append(["ctrl_cfg.prop_cfg.model_pretrained", "True"])
     overrides.append(["exp_cfg.exp_cfg.ninit_rollouts", "0"])
     overrides.append(["exp_cfg.exp_cfg.ntrain_iters", "1"])
-    overrides.append(["exp_cfg.log_cfg.nrecord", "1"])
+    overrides.append(["exp_cfg.log_cfg.nrecord", "1"]) # change it to 0. Previous is 1.
 
     cfg = create_config(env, ctrl_type, ctrl_args, overrides, logdir)
     cfg.pprint()

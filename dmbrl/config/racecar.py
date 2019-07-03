@@ -18,7 +18,7 @@ class CartpoleConfigModule:
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 25
-    MODEL_IN, MODEL_OUT = 5, 2   # could change the shape of the tensor
+    MODEL_IN, MODEL_OUT = 4, 2   # could change the shape of the tensor
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
@@ -41,10 +41,13 @@ class CartpoleConfigModule:
 
     @staticmethod
     def obs_preproc(obs):
-        if isinstance(obs, np.ndarray):
-            return np.concatenate([np.sin(obs[:, 1:2]), np.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
-        else:
-            return tf.concat([tf.sin(obs[:, 1:2]), tf.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
+        print('obs in obs_preproc')
+        print(obs)
+        return obs
+        # if isinstance(obs, np.ndarray):
+        #     return np.concatenate([np.sin(obs[:, 1:2]), np.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
+        # else:
+        #     return tf.concat([tf.sin(obs[:, 1:2]), tf.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
 
     @staticmethod
     def obs_postproc(obs, pred):
@@ -56,17 +59,22 @@ class CartpoleConfigModule:
 
     @staticmethod
     def obs_cost_fn(obs):
+        # if isinstance(obs, np.ndarray):
+        #     return -np.exp(-np.sum(
+        #         np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([0.0, 0.6])), axis=1
+        #     ) / (0.6 ** 2))
+        # else:
+        #     return -tf.exp(-tf.reduce_sum(
+        #         tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([0.0, 0.6])), axis=1
+        #     ) / (0.6 ** 2))
         if isinstance(obs, np.ndarray):
-            return -np.exp(-np.sum(
-                np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([0.0, 0.6])), axis=1
-            ) / (0.6 ** 2))
+            return np.square(3*obs[:,1])
         else:
-            return -tf.exp(-tf.reduce_sum(
-                tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([0.0, 0.6])), axis=1
-            ) / (0.6 ** 2))
+            return tf.square(3*obs[:,1])
 
     @staticmethod
     def ac_cost_fn(acs):
+        #return 0
         if isinstance(acs, np.ndarray):
             return 0.01 * np.sum(np.square(acs), axis=1)
         else:
