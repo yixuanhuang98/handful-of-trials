@@ -96,7 +96,7 @@ METHOD = [
 ][1]        # choose the method for optimization
 
 
-class PPO(object):
+class PPO(object):  # ppo for choice model
 
     def __init__(self):
         self.sess = tf.Session()
@@ -465,7 +465,7 @@ class Agent:
         if self.noise_stddev is not None:
             self.dU = self.env.action_space.shape[0]
 
-    def sample(self, horizon, policy,  record_fname=None):
+    def sample(self, horizon, policy, record_fname=None):
         """Samples a rollout from the agent.
 
         Arguments: 
@@ -555,10 +555,8 @@ class Agent:
                 buffer_r.append((reward+8)/8)    # normalize reward, find to be useful
                 #s = s_
                 ep_r += reward
-
-        # update ppo
                 if (t+1) % BATCH == 0 or t == horizon-1:
-                    v_s_ = self.ppo_choice.get_v(s_)
+                    v_s_ = self.ppo_choice.get_v(O[-1])
                     discounted_r = []
                     for r in buffer_r[::-1]:
                         v_s_ = r + GAMMA * v_s_
