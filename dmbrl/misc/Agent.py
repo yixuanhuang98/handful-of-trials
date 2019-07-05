@@ -81,12 +81,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gym
 
-EP_MAX = 1000
+EP_MAX = 100
 EP_LEN = 200
 GAMMA = 0.9
 A_LR = 0.0001
 C_LR = 0.0002
-BATCH = 16
+BATCH = 8
 A_UPDATE_STEPS = 10
 C_UPDATE_STEPS = 10
 S_DIM, A_DIM = 2,1
@@ -381,7 +381,8 @@ def configure_logger(log_path, **kwargs):
 def get_ppo():#):
     # configure logger, disable logging in child MPI processes (with rank > 0)
     print('enter main function')
-    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e3']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=2e5']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    # if 4e5 ,it uses total_night
     arg_parser = common_arg_parser()
     args1, unknown_args = arg_parser.parse_known_args(args1)
     print('unknown_args')
@@ -506,6 +507,8 @@ class Agent:
         print(horizon)
 
         all_ep_r = []
+        total_ob = []
+        total_ac = []
 
         for ep in range(EP_MAX):
             times, rewards = [], []
@@ -536,22 +539,30 @@ class Agent:
                 print('action')
                 print(A[t])
                 times.append(time.time() - start)
-
+                #abs(carpos[1])
+                previous_reward = 0
+                if(abs(O[t][1]) > 1):
+                    previous_reward = - 10 * abs(O[t][1]) 
                 if self.noise_stddev is None:
                     obs, reward, done, info = self.env.step(A[t])
                 else:
                     action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
                     action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
                     obs, reward, done, info = self.env.step(action)
+                reward += previous_reward
                 O.append(obs)
                 reward_sum += reward
                 rewards.append(reward)
-                if(done):
+                if(done):   # why we could not delete it
                     break
 
                 #s_, r, done, _ = env.step(a)
+                if(ep >= 10):
+                    total_ob.append(obs)
+                    total_ac.append(a)
                 buffer_s.append(obs)
                 buffer_a.append(a)
+                
                 buffer_r.append((reward+8)/8)    # normalize reward, find to be useful
                 #s = s_
                 ep_r += reward
@@ -566,6 +577,12 @@ class Agent:
                     bs, ba, br = np.vstack(buffer_s), np.vstack(buffer_a), np.array(discounted_r)[:, np.newaxis]
                     buffer_s, buffer_a, buffer_r = [], [], []
                     self.ppo_choice.update(bs, ba, br)
+            
+            if(ep >= 15):
+                final_output = []
+                final_output = np.concatenate((total_ob,total_ac),axis = 1)
+                #np.savetxt('/home/guest/txt_result/test',(total_final)) 
+                np.savetxt('/home/guest/txt_result/test_2e5',(final_output))
             if ep == 0: all_ep_r.append(ep_r)
             else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
             print(
@@ -573,6 +590,7 @@ class Agent:
                 "|Ep_r: %i" % ep_r,
                 ("|Lam: %.4f" % METHOD['lam']) if METHOD['name'] == 'kl_pen' else '',
             )
+            
 
         # for t in range(horizon):
         #     if video_record:
