@@ -381,7 +381,7 @@ def configure_logger(log_path, **kwargs):
 def get_ppo():#):
     # configure logger, disable logging in child MPI processes (with rank > 0)
     print('enter main function')
-    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e3']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e1']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
     # if 4e5 ,it uses total_night
     arg_parser = common_arg_parser()
     args1, unknown_args = arg_parser.parse_known_args(args1)
@@ -456,8 +456,8 @@ class Agent:
         """
         self.env = params.env
         self.noise_stddev = params.noise_stddev if params.get("noisy_actions", False) else None
-        self.ppo_policy = get_ppo()
-        self.ppo_choice = PPO()
+        # self.ppo_policy = get_ppo()
+        # self.ppo_choice = PPO()
         if isinstance(self.env, DotMap):
             raise ValueError("Environment must be provided to the agent at initialization.")
         if (not isinstance(self.noise_stddev, float)) and params.get("noisy_actions", False):

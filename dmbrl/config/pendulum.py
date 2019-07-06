@@ -19,7 +19,7 @@ class CartpoleConfigModule:
     NTRAIN_ITERS = 300
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 25
-    MODEL_IN, MODEL_OUT = 6, 5   # could change the shape of the tensor
+    MODEL_IN, MODEL_OUT = 3,2   # could change the shape of the tensor
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
@@ -75,9 +75,9 @@ class CartpoleConfigModule:
         #         return  tf.square(50/nor_th)
         # else:
         if isinstance(obs, np.ndarray):
-            return  np.sum(obs[0])
+            return  np.sum(- 10*obs[1])
         else:
-            return  tf.reduce_sum(obs[0])
+            return  tf.reduce_sum(- 10*obs[1])
         # if isinstance(obs, np.ndarray):
         #     return  (obs[0])
         # else:
