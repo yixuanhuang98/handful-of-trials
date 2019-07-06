@@ -75,9 +75,9 @@ class CartpoleConfigModule:
         #         return  tf.square(50/nor_th)
         # else:
         if isinstance(obs, np.ndarray):
-            return  np.sum(- 10*obs[1])
+            return  np.sum(10* obs[0] - 10*obs[1])
         else:
-            return  tf.reduce_sum(- 10*obs[1])
+            return  tf.reduce_sum(10 * obs[0] - 10*obs[1])
         # if isinstance(obs, np.ndarray):
         #     return  (obs[0])
         # else:
