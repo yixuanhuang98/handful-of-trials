@@ -593,18 +593,22 @@ class Agent:
             
 
         video_record = record_fname is not None
-        recorder = None if not video_record else VideoRecorder(self.env, record_fname)
+        recorder = None #if not video_record else VideoRecorder(self.env, record_fname)
 
         times, rewards = [], []
         O, A, reward_sum, done = [self.env.reset()], [], 0, False
 
         policy.reset()
         for t in range(horizon):
-            if video_record:
-                recorder.capture_frame()
+            # if video_record:
+            #     recorder.capture_frame()
             start = time.time()
             A.append(policy.act(O[t], t))
             times.append(time.time() - start)
+            # print('Observation')
+            # print(O[t])
+            # print('action')
+            # print(A[t])
 
             if self.noise_stddev is None:
                 obs, reward, done, info = self.env.step(A[t])

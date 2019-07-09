@@ -19,7 +19,8 @@ class CartpoleConfigModule:
     NTRAIN_ITERS = 300
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 25
-    MODEL_IN, MODEL_OUT = 3,2   # could change the shape of the tensor
+    #MODEL_IN, MODEL_OUT = 3,2   # could change the shape of the tensor
+    MODEL_IN, MODEL_OUT = 5,3
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
@@ -42,11 +43,11 @@ class CartpoleConfigModule:
 
     @staticmethod
     def obs_preproc(obs):
-        return obs
-        # if isinstance(obs, np.ndarray):
-        #     return np.concatenate([np.sin(obs[:, 1:2]), np.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
-        # else:
-        #     return tf.concat([tf.sin(obs[:, 1:2]), tf.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
+        #return obs
+        if isinstance(obs, np.ndarray):
+            return np.concatenate([np.sin(obs[:, 1:2]), np.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
+        else:
+            return tf.concat([tf.sin(obs[:, 1:2]), tf.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
 
     @staticmethod
     def obs_postproc(obs, pred):
@@ -74,14 +75,28 @@ class CartpoleConfigModule:
         #     else:
         #         return  tf.square(50/nor_th)
         # else:
-        if isinstance(obs, np.ndarray):
-            return  np.sum(10* obs[0] - 10*obs[1])
-        else:
-            return  tf.reduce_sum(10 * obs[0] - 10*obs[1])
+        # if isinstance(obs, np.ndarray):
+        #     return  np.sum(10/obs[0] + 10*obs[1])
+        # else:
+        #     return  tf.reduce_sum(10/obs[0] + 10*obs[1])
+        # if isinstance(obs, np.ndarray):
+        #     return  np.sum(- 10*obs[-1])
+        # else:
+        #     return  tf.reduce_sum(- 10*obs[-1])
         # if isinstance(obs, np.ndarray):
         #     return  (obs[0])
         # else:
         #     return  (obs[0])
+        # print('obs shape')
+        # print(obs)
+        if isinstance(obs, np.ndarray):
+            return -np.exp(-np.sum(
+                np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([- np.pi/2,8])), axis=1
+            ) )
+        else:
+            return -tf.exp(-tf.reduce_sum(
+                tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([- np.pi/2, 8])), axis=1
+            ) )
         # if isinstance(obs, np.ndarray):
         #     return -np.exp(-np.sum(
         #         np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([0.0, 0.6])), axis=1
@@ -127,10 +142,23 @@ class CartpoleConfigModule:
     @staticmethod
     def _get_ee_pos(obs, are_tensors=False):
         x0, theta = obs[:, :1], obs[:, 1:2]
+        # print('x0 and theta')
+        # print(x0)
+        # print(theta)
+        nor_th = obs[:, :1]
+        #theta = obs[:,1]
+        thetadot = obs[:, 2:]
+        # print('north and thetadot')
+        # print(nor_th)
+        # print(thetadot)
         if are_tensors:
-            return tf.concat([x0 - 0.6 * tf.sin(theta), -0.6 * tf.cos(theta)], axis=1)
+            return tf.concat([nor_th,thetadot], axis=1)
         else:
-            return np.concatenate([x0 - 0.6 * np.sin(theta), -0.6 * np.cos(theta)], axis=1)
+            return np.concatenate([nor_th ,thetadot], axis=1)
+        # if are_tensors:
+        #     return tf.concat([x0 - 0.6 * tf.sin(theta), -0.6 * tf.cos(theta)], axis=1)
+        # else:
+        #     return np.concatenate([x0 - 0.6 * np.sin(theta), -0.6 * np.cos(theta)], axis=1)
 
 
 CONFIG_MODULE = CartpoleConfigModule
