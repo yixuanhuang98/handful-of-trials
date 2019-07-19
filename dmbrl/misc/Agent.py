@@ -381,8 +381,9 @@ def configure_logger(log_path, **kwargs):
 def get_ppo():#):
     # configure logger, disable logging in child MPI processes (with rank > 0)
     print('enter main function')
-    #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e5']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
-    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/home/jovyan/baselines/model/racecar_1e6', '--play']
+    #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e3']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/home/jovyan/baselines/model/racecar_1e6', '--play']
+    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/home/gao-4144/baselines/model/racecar_1e6', '--play']
     # if 4e5 ,it uses total_night
     arg_parser = common_arg_parser()
     args1, unknown_args = arg_parser.parse_known_args(args1)
@@ -457,8 +458,8 @@ class Agent:
         """
         self.env = params.env
         self.noise_stddev = params.noise_stddev if params.get("noisy_actions", False) else None
-        # self.ppo_policy = get_ppo()
-        # self.ppo_choice = PPO()
+        self.ppo_policy = get_ppo()
+        self.ppo_choice = PPO()
         if isinstance(self.env, DotMap):
             raise ValueError("Environment must be provided to the agent at initialization.")
         if (not isinstance(self.noise_stddev, float)) and params.get("noisy_actions", False):
@@ -515,21 +516,24 @@ class Agent:
             times, rewards = [], []
             print('reset in agent')
             O, A, reward_sum, done = [self.env.reset()], [], 0, False
-            print('ob')
-            print(O)
+#             print('ob')
+#             print(O)
             policy.reset()
             buffer_s, buffer_a, buffer_r = [], [], []
             ep_r = 0
+            mpc_iter = 0
             for t in range(horizon):    # in one episode
                 #env.render()
                 start = time.time()
                 a = self.ppo_choice.choose_action(O[t])
-                print('action')
-                print(a)
+#                 print('action')
+#                 print(a)
                 
-                if(a >= 0):
-                    true_action = policy.act(O[t], t)
+                if(O[t][1] >= 1 or O[t][1] <= -1):
+                    true_action = policy.act(O[t], mpc_iter)
+                    mpc_iter = mpc_iter + 1
                 else:
+                    mpc_iter = 0
                     O_new = np.zeros((1,2))
                     O_new[0,:] = O[t]
                     step_action, _ , _ , _ = self.ppo_policy.step(O_new)
@@ -581,11 +585,12 @@ class Agent:
                     buffer_s, buffer_a, buffer_r = [], [], []
                     self.ppo_choice.update(bs, ba, br)
             
-            if(ep >= 15):
+            if(ep >= 15 and ep % 5 == 0):
                 final_output = []
                 final_output = np.concatenate((total_ob,total_ac),axis = 1)
                 #np.savetxt('/home/jovyan/txt_result/test',(total_final)) 
-                np.savetxt('/home/jovyan/txt_result/1e5_1',(final_output))
+                #np.savetxt('/home/jovyan/txt_result/1e5_1',(final_output))
+                np.savetxt('/home/gao-4144/txt_result/1e5_2',(final_output))
             if ep == 0: all_ep_r.append(ep_r)
             else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
             print(
@@ -598,33 +603,33 @@ class Agent:
         # video_record = record_fname is not None
         # recorder = None #if not video_record else VideoRecorder(self.env, record_fname)
 
-        times, rewards = [], []
-        O, A, reward_sum, done = [self.env.reset()], [], 0, False
+#         times, rewards = [], []
+#         O, A, reward_sum, done = [self.env.reset()], [], 0, False
 
-        policy.reset()
-        for t in range(horizon):
-            # if video_record:
-            #     recorder.capture_frame()
-            start = time.time()
-            A.append(policy.act(O[t], t))
-            times.append(time.time() - start)
-            # print('Observation')
-            # print(O[t])
-            # print('action')
-            # print(A[t])
+#         policy.reset()
+#         for t in range(horizon):
+#             # if video_record:
+#             #     recorder.capture_frame()
+#             start = time.time()
+#             A.append(policy.act(O[t], t))
+#             times.append(time.time() - start)
+#             print('Observation')
+#             print(O[t])
+#             print('action')
+#             print(A[t])
 
-            if self.noise_stddev is None:
-                obs, reward, done, info = self.env.step(A[t])
-            else:
-                action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
-                action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
-                obs, reward, done, info = self.env.step(action)
-            O.append(obs)
-            reward_sum += reward
-            rewards.append(reward)
-            self.env.render()
-            if done:
-                break
+#             if self.noise_stddev is None:
+#                 obs, reward, done, info = self.env.step(A[t])
+#             else:
+#                 action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
+#                 action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
+#                 obs, reward, done, info = self.env.step(action)
+#             O.append(obs)
+#             reward_sum += reward
+#             rewards.append(reward)
+#             self.env.render()
+#             if done:
+#                 break
 
         # if video_record:
         #     recorder.capture_frame()
