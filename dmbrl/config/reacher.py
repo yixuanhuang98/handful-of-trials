@@ -13,12 +13,14 @@ import dmbrl.env
 
 
 class ReacherConfigModule:
-    ENV_NAME = "MBRLReacher3D-v0"
+    #ENV_NAME = "MBRLReacher3D-v0"
+    ENV_NAME = "Reacher-v2"
     TASK_HORIZON = 150
     NTRAIN_ITERS = 100
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 25
-    MODEL_IN, MODEL_OUT = 24, 17
+    MODEL_IN, MODEL_OUT = 16, 14   # previous time 24,17
+    #MODEL_IN, MODEL_OUT = 24, 17
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
@@ -57,10 +59,29 @@ class ReacherConfigModule:
             self.goal.load(self.ENV.goal, sess)
 
     def obs_cost_fn(self, obs):
+        # if isinstance(obs, np.ndarray):
+        #     return np.sum(np.square(4/(obs[0] - np.pi/2)))
+        # else:
+        #     return tf.reduce_sum(tf.square(4/(obs[0] - np.pi/2)))
+        # print('obs[0]')
+        # print(obs[:,:2])
+        # print('goal')
+        # print(self.ENV.goal)
+
+        # if isinstance(obs, np.ndarray):
+        #     return np.sum(obs[:,0])
+        # else:
+        #     return tf.reduce_sum(obs[:,0])
+
         if isinstance(obs, np.ndarray):
-            return np.sum(np.square(ReacherConfigModule.get_ee_pos(obs, are_tensors=False) - self.ENV.goal), axis=1)
+            return np.sum(np.square(obs[:,:2] - self.ENV.goal), axis=1)
         else:
-            return tf.reduce_sum(tf.square(ReacherConfigModule.get_ee_pos(obs, are_tensors=True) - self.goal), axis=1)
+            return tf.reduce_sum(tf.square(obs[:,:2] - self.goal), axis=1)
+        
+        # if isinstance(obs, np.ndarray):
+        #     return np.sum(np.square(ReacherConfigModule.get_ee_pos(obs, are_tensors=False) - self.ENV.goal), axis=1)
+        # else:
+        #     return tf.reduce_sum(tf.square(ReacherConfigModule.get_ee_pos(obs, are_tensors=True) - self.goal), axis=1)
 
     @staticmethod
     def ac_cost_fn(acs):

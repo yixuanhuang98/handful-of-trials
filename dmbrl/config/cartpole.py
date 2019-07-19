@@ -14,6 +14,7 @@ import dmbrl.env
 
 class CartpoleConfigModule:
     ENV_NAME = "MBRLCartpole-v0"
+    #ENV_NAME = "Cartpole-v0"
     TASK_HORIZON = 200
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1

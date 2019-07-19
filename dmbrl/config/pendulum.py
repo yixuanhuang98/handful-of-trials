@@ -14,7 +14,7 @@ import dmbrl.env
 
 
 class CartpoleConfigModule:
-    ENV_NAME = "Pendulum-v0"
+    ENV_NAME = "Reacher-v2"
     TASK_HORIZON = 200
     NTRAIN_ITERS = 300
     NROLLOUTS_PER_ITER = 1
@@ -89,22 +89,22 @@ class CartpoleConfigModule:
         #     return  (obs[0])
         # print('obs shape')
         # print(obs)
-        if isinstance(obs, np.ndarray):
-            return -np.exp(-np.sum(
-                np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([- np.pi/2,8])), axis=1
-            ) )
-        else:
-            return -tf.exp(-tf.reduce_sum(
-                tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([- np.pi/2, 8])), axis=1
-            ) )
         # if isinstance(obs, np.ndarray):
         #     return -np.exp(-np.sum(
-        #         np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([0.0, 0.6])), axis=1
-        #     ) / (0.6 ** 2))
+        #         np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([- np.pi/2,8])), axis=1
+        #     ) )
         # else:
         #     return -tf.exp(-tf.reduce_sum(
-        #         tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([0.0, 0.6])), axis=1
-        #     ) / (0.6 ** 2))
+        #         tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([- np.pi/2, 8])), axis=1
+        #     ) )
+        if isinstance(obs, np.ndarray):
+            return -np.exp(-np.sum(
+                np.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=False) - np.array([0.0, 0.6])), axis=1
+            ) / (0.6 ** 2))
+        else:
+            return -tf.exp(-tf.reduce_sum(
+                tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([0.0, 0.6])), axis=1
+            ) / (0.6 ** 2))
 
     @staticmethod
     def ac_cost_fn(acs):
@@ -151,14 +151,14 @@ class CartpoleConfigModule:
         # print('north and thetadot')
         # print(nor_th)
         # print(thetadot)
-        if are_tensors:
-            return tf.concat([nor_th,thetadot], axis=1)
-        else:
-            return np.concatenate([nor_th ,thetadot], axis=1)
         # if are_tensors:
-        #     return tf.concat([x0 - 0.6 * tf.sin(theta), -0.6 * tf.cos(theta)], axis=1)
+        #     return tf.concat([nor_th,thetadot], axis=1)
         # else:
-        #     return np.concatenate([x0 - 0.6 * np.sin(theta), -0.6 * np.cos(theta)], axis=1)
+        #     return np.concatenate([nor_th ,thetadot], axis=1)
+        if are_tensors:
+            return tf.concat([x0 - 0.6 * tf.sin(theta), -0.6 * tf.cos(theta)], axis=1)
+        else:
+            return np.concatenate([x0 - 0.6 * np.sin(theta), -0.6 * np.cos(theta)], axis=1)
 
 
 CONFIG_MODULE = CartpoleConfigModule

@@ -41,8 +41,8 @@ class CartpoleConfigModule:
 
     @staticmethod
     def obs_preproc(obs):
-        print('obs in obs_preproc')
-        print(obs)
+        # print('obs in obs_preproc')
+        # print(obs)
         return obs
         # if isinstance(obs, np.ndarray):
         #     return np.concatenate([np.sin(obs[:, 1:2]), np.cos(obs[:, 1:2]), obs[:, :1], obs[:, 2:]], axis=1)
@@ -67,10 +67,12 @@ class CartpoleConfigModule:
         #     return -tf.exp(-tf.reduce_sum(
         #         tf.square(CartpoleConfigModule._get_ee_pos(obs, are_tensors=True) - np.array([0.0, 0.6])), axis=1
         #     ) / (0.6 ** 2))
+        # print('obs[1]')
+        # print(obs[:,1])
         if isinstance(obs, np.ndarray):
-            return np.square(3*obs[:,1])
+            return np.sum(np.square(3*obs[:,1]))
         else:
-            return tf.square(3*obs[:,1])
+            return tf.reduce_sum(tf.square(3*obs[:,1]))
 
     @staticmethod
     def ac_cost_fn(acs):
