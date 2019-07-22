@@ -55,6 +55,8 @@ class ReacherConfigModule:
         return next_obs - obs
 
     def update_goal(self, sess=None):
+        self.ENV.goal[0] = 0
+        self.ENV.goal[1] = - 0.2
         if sess is not None:
             self.goal.load(self.ENV.goal, sess)
 
@@ -72,6 +74,10 @@ class ReacherConfigModule:
         #     return np.sum(obs[:,0])
         # else:
         #     return tf.reduce_sum(obs[:,0])
+        self.ENV.goal[0] = 0
+        self.ENV.goal[1] = - 0.2
+        # self.goal[0] = 0
+        # self.goal[1] = -0.2
 
         if isinstance(obs, np.ndarray):
             return np.sum(np.square(obs[:,:2] - self.ENV.goal), axis=1)

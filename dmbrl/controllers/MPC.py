@@ -173,6 +173,10 @@ class MPC(Controller):
         for obs, acs in zip(obs_trajs, acs_trajs):
             new_train_in.append(np.concatenate([self.obs_preproc(obs[:-1]), acs], axis=-1))
             new_train_targs.append(self.targ_proc(obs[:-1], obs[1:]))
+        print('self.train_in')
+        print(self.train_in)
+        print('new_train_in')
+        print(np.shape(new_train_in))
         self.train_in = np.concatenate([self.train_in] + new_train_in, axis=0)
         self.train_targs = np.concatenate([self.train_targs] + new_train_targs, axis=0)
 

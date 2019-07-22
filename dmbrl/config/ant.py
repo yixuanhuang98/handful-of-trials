@@ -14,12 +14,12 @@ import dmbrl.env
 
 
 class CartpoleConfigModule:
-    ENV_NAME = "Pendlum-v0"
+    ENV_NAME = "Ant-v3"
     TASK_HORIZON = 200
     NTRAIN_ITERS = 500
     NROLLOUTS_PER_ITER = 1
     PLAN_HOR = 25
-    MODEL_IN, MODEL_OUT = 8,6   # could change the shape of the tensor
+    MODEL_IN, MODEL_OUT = 4,8   # could change the shape of the tensor
     GP_NINDUCING_POINTS = 200
 
     def __init__(self):
@@ -71,9 +71,9 @@ class CartpoleConfigModule:
         # print('obs[1]')
         # print(obs[:,1])
         if isinstance(obs, np.ndarray):
-            return np.sum(np.square(3*obs[:,1]))
+            return np.sum(np.square(obs[:,2] - obs[:,0]))
         else:
-            return tf.reduce_sum(tf.square(3*obs[:,1]))
+            return tf.reduce_sum(tf.square(obs[:,2] - obs[:,0]))
 
     @staticmethod
     def ac_cost_fn(acs):

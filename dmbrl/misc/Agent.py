@@ -26,6 +26,9 @@ from baselines.common.tf_util import get_session
 from baselines import logger
 from importlib import import_module
 import pybullet_envs.bullet.racecarGymEnv as e
+# from stable_baselines.sac.policies import MlpPolicy
+# from stable_baselines.common.vec_env import DummyVecEnv
+# from stable_baselines import SAC
 
 try:
     from mpi4py import MPI
@@ -381,9 +384,9 @@ def configure_logger(log_path, **kwargs):
 def get_ppo():#):
     # configure logger, disable logging in child MPI processes (with rank > 0)
     print('enter main function')
-    #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=1e3']#, '--load_path=/Users/huangyixuan/models/racecar_ppo2', '--play']
+    #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--load_path=/Users/huangyixuan/model/racecar_ppo2', '--play']
     #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/home/jovyan/baselines/model/racecar_1e6', '--play']
-    args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/home/gao-4144/baselines/model/racecar_1e6', '--play']
+    #args1 = ['run.py', '--alg=ppo2', '--env=RacecarBulletEnv-v0', '--num_timesteps=0', '--load_path=/home/gao-4144/baselines/model/racecar_1e6', '--play']
     # if 4e5 ,it uses total_night
     arg_parser = common_arg_parser()
     args1, unknown_args = arg_parser.parse_known_args(args1)
@@ -458,8 +461,8 @@ class Agent:
         """
         self.env = params.env
         self.noise_stddev = params.noise_stddev if params.get("noisy_actions", False) else None
-        self.ppo_policy = get_ppo()
-        self.ppo_choice = PPO()
+        # self.ppo_policy = get_ppo()
+        # self.ppo_choice = PPO()
         if isinstance(self.env, DotMap):
             raise ValueError("Environment must be provided to the agent at initialization.")
         if (not isinstance(self.noise_stddev, float)) and params.get("noisy_actions", False):
@@ -508,128 +511,161 @@ class Agent:
         # print('horizon')
         # print(horizon)
 
-        all_ep_r = []
-        total_ob = []
-        total_ac = []
+#         all_ep_r = []
+#         total_ob = []
+#         total_ac = []
 
-        for ep in range(EP_MAX):
-            times, rewards = [], []
-            print('reset in agent')
-            O, A, reward_sum, done = [self.env.reset()], [], 0, False
-#             print('ob')
-#             print(O)
-            policy.reset()
-            buffer_s, buffer_a, buffer_r = [], [], []
-            ep_r = 0
-            mpc_iter = 0
-            for t in range(horizon):    # in one episode
-                #env.render()
-                start = time.time()
-                a = self.ppo_choice.choose_action(O[t])
+#         for ep in range(EP_MAX):
+#             times, rewards = [], []
+#             print('reset in agent')
+#             O, A, reward_sum, done = [self.env.reset()], [], 0, False
+# #             print('ob')
+# #             print(O)
+#             policy.reset()
+#             buffer_s, buffer_a, buffer_r = [], [], []
+#             ep_r = 0
+#             mpc_iter = 0
+#             for t in range(horizon):    # in one episode
+#                 #env.render()
+#                 start = time.time()
+#                 a = self.ppo_choice.choose_action(O[t])
+# #                 print('action')
+# #                 print(a)
+                
+#                 if(O[t][1] >= 0 or O[t][1] <= -0):
+#                     true_action = policy.act(O[t], t)
+#                     mpc_iter = mpc_iter + 1
+#                 else:
+#                     mpc_iter = 0
+#                     O_new = np.zeros((1,2))
+#                     O_new[0,:] = O[t]
+#                     step_action, _ , _ , _ = self.ppo_policy.step(O_new)
+#                     true_action = step_action[0]
+#                 A.append(true_action)
+#                 print('Observation')
+#                 print(O[t])
 #                 print('action')
-#                 print(a)
-                
-                if(O[t][1] >= 1 or O[t][1] <= -1):
-                    true_action = policy.act(O[t], mpc_iter)
-                    mpc_iter = mpc_iter + 1
-                else:
-                    mpc_iter = 0
-                    O_new = np.zeros((1,2))
-                    O_new[0,:] = O[t]
-                    step_action, _ , _ , _ = self.ppo_policy.step(O_new)
-                    true_action = step_action[0]
-                A.append(true_action)
-                print('Observation')
-                print(O[t])
-                print('action')
-                print(A[t])
-                times.append(time.time() - start)
-                #abs(carpos[1])
-                # previous_reward = 0
-                # if(abs(O[t][1]) > 1):
-                #     previous_reward = - 5 * abs(O[t][1]) 
-                if self.noise_stddev is None:
-                    obs, reward, done, info = self.env.step(A[t])
-                else:
-                    action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
-                    action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
-                    obs, reward, done, info = self.env.step(action)
-                # if(abs(O[t][1]) > 1):
-                #     reward = - 5 * abs(O[t][1]) 
-                #reward += previous_reward
-                O.append(obs)
-                reward_sum += reward
-                rewards.append(reward)
-                if(done):   # why we could not delete it
-                    break
+#                 print(A[t])
+#                 times.append(time.time() - start)
+#                 #abs(carpos[1])
+#                 # previous_reward = 0
+#                 # if(abs(O[t][1]) > 1):
+#                 #     previous_reward = - 5 * abs(O[t][1]) 
+#                 if self.noise_stddev is None:
+#                     obs, reward, done, info = self.env.step(A[t])
+#                 else:
+#                     action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
+#                     action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
+#                     obs, reward, done, info = self.env.step(action)
+#                 # if(abs(O[t][1]) > 1):
+#                 #     reward = - 5 * abs(O[t][1]) 
+#                 #reward += previous_reward
+#                 O.append(obs)
+#                 reward_sum += reward
+#                 rewards.append(reward)
+#                 if(done):   # why we could not delete it
+#                     break
 
-                #s_, r, done, _ = env.step(a)
-                if(ep >= 10):
-                    total_ob.append(obs)
-                    total_ac.append(a)
-                buffer_s.append(obs)
-                buffer_a.append(a)
+#                 #s_, r, done, _ = env.step(a)
+#                 if(ep >= 10):
+#                     total_ob.append(obs)
+#                     total_ac.append(a)
+#                 buffer_s.append(obs)
+#                 buffer_a.append(a)
                 
-                buffer_r.append((reward+8)/8)    # normalize reward, find to be useful
-                #s = s_
-                ep_r += reward
-                if (t+1) % BATCH == 0 or t == horizon-1:
-                    v_s_ = self.ppo_choice.get_v(O[-1])
-                    discounted_r = []
-                    for r in buffer_r[::-1]:
-                        v_s_ = r + GAMMA * v_s_
-                        discounted_r.append(v_s_)
-                    discounted_r.reverse()
+#                 buffer_r.append((reward+8)/8)    # normalize reward, find to be useful
+#                 #s = s_
+#                 ep_r += reward
+#                 if (t+1) % BATCH == 0 or t == horizon-1:
+#                     v_s_ = self.ppo_choice.get_v(O[-1])
+#                     discounted_r = []
+#                     for r in buffer_r[::-1]:
+#                         v_s_ = r + GAMMA * v_s_
+#                         discounted_r.append(v_s_)
+#                     discounted_r.reverse()
 
-                    bs, ba, br = np.vstack(buffer_s), np.vstack(buffer_a), np.array(discounted_r)[:, np.newaxis]
-                    buffer_s, buffer_a, buffer_r = [], [], []
-                    self.ppo_choice.update(bs, ba, br)
+#                     bs, ba, br = np.vstack(buffer_s), np.vstack(buffer_a), np.array(discounted_r)[:, np.newaxis]
+#                     buffer_s, buffer_a, buffer_r = [], [], []
+#                     self.ppo_choice.update(bs, ba, br)
             
-            if(ep >= 15 and ep % 5 == 0):
-                final_output = []
-                final_output = np.concatenate((total_ob,total_ac),axis = 1)
-                #np.savetxt('/home/jovyan/txt_result/test',(total_final)) 
-                #np.savetxt('/home/jovyan/txt_result/1e5_1',(final_output))
-                np.savetxt('/home/gao-4144/txt_result/1e5_2',(final_output))
-            if ep == 0: all_ep_r.append(ep_r)
-            else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
-            print(
-                'Ep: %i' % ep,
-                "|Ep_r: %i" % ep_r,
-                ("|Lam: %.4f" % METHOD['lam']) if METHOD['name'] == 'kl_pen' else '',
-            )
+#             if(ep >= 15 and ep % 5 == 0):
+#                 final_output = []
+#                 final_output = np.concatenate((total_ob,total_ac),axis = 1)
+#                 #np.savetxt('/home/jovyan/txt_result/test',(total_final)) 
+#                 #np.savetxt('/home/jovyan/txt_result/1e5_1',(final_output))
+#                 np.savetxt('/home/gao-4144/txt_result/1e5_2',(final_output))
+#             if ep == 0: all_ep_r.append(ep_r)
+#             else: all_ep_r.append(all_ep_r[-1]*0.9 + ep_r*0.1)
+#             print(
+#                 'Ep: %i' % ep,
+#                 "|Ep_r: %i" % ep_r,
+#                 ("|Lam: %.4f" % METHOD['lam']) if METHOD['name'] == 'kl_pen' else '',
+#             )
             
 
         # video_record = record_fname is not None
         # recorder = None #if not video_record else VideoRecorder(self.env, record_fname)
 
-#         times, rewards = [], []
-#         O, A, reward_sum, done = [self.env.reset()], [], 0, False
+        times, rewards = [], []
+        O, A, reward_sum, done = [self.env.reset()], [], 0, False
 
-#         policy.reset()
-#         for t in range(horizon):
-#             # if video_record:
-#             #     recorder.capture_frame()
-#             start = time.time()
-#             A.append(policy.act(O[t], t))
-#             times.append(time.time() - start)
-#             print('Observation')
-#             print(O[t])
-#             print('action')
-#             print(A[t])
+        policy.reset()
+        for t in range(horizon):
+            # if video_record:
+            #     recorder.capture_frame()
+            start = time.time()
+            A.append(policy.act(O[t], t))
+            times.append(time.time() - start)
+            # print('Observation')
+            # print(O[t])
+            # print('action')
+            # print(A[t])
 
-#             if self.noise_stddev is None:
-#                 obs, reward, done, info = self.env.step(A[t])
-#             else:
-#                 action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
-#                 action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
-#                 obs, reward, done, info = self.env.step(action)
-#             O.append(obs)
-#             reward_sum += reward
-#             rewards.append(reward)
-#             self.env.render()
-#             if done:
-#                 break
+            if self.noise_stddev is None:
+                obs, reward, done, info = self.env.step(A[t])
+            else:
+                action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
+                action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
+                obs, reward, done, info = self.env.step(action)
+            O.append(obs)
+            reward_sum += reward
+            rewards.append(reward)
+            self.env.render()
+            if done:
+                break
+
+
+        # times, rewards = [], []
+        # O, A, reward_sum, done = [self.env.reset()], [], 0, False
+        # policy.reset()
+        # model = SAC(MlpPolicy, self.env, verbose=1)
+        # model.learn(policy, self.ppo_policy, total_timesteps=1000000, log_interval=10)
+        
+        
+        # for t in range(horizon):
+        #     # if video_record:
+        #     #     recorder.capture_frame()
+        #     start = time.time()
+        #     A.append(policy.act(O[t], t))
+        #     times.append(time.time() - start)
+        #     # print('Observation')
+        #     # print(O[t])
+        #     # print('action')
+        #     # print(A[t])
+
+        #     if self.noise_stddev is None:
+        #         obs, reward, done, info = self.env.step(A[t])
+        #     else:
+        #         action = A[t] + np.random.normal(loc=0, scale=self.noise_stddev, size=[self.dU])
+        #         action = np.minimum(np.maximum(action, self.env.action_space.low), self.env.action_space.high)
+        #         obs, reward, done, info = self.env.step(action)
+        #     O.append(obs)
+        #     reward_sum += reward
+        #     rewards.append(reward)
+        #     self.env.render()
+        #     if done:
+        #         break
+        
 
         # if video_record:
         #     recorder.capture_frame()
